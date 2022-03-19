@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="20086" systemVersion="21D62" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="Dog" representedClassName="EntityDog" syncable="YES">
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <relationship name="walks" optional="YES" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="Walk" inverseName="dog" inverseEntity="Walk"/>
+    </entity>
+    <entity name="Walk" representedClassName="EntityWalk" syncable="YES">
+        <attribute name="date" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="dog" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Dog" inverseName="walks" inverseEntity="Dog"/>
+    </entity>
+    <elements>
+        <element name="Dog" positionX="-727.328125" positionY="370.9375" width="128" height="73"/>
+        <element name="Walk" positionX="-498.3203125" positionY="77.0546875" width="128" height="73"/>
+    </elements>
+</model>
