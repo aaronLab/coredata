@@ -56,6 +56,8 @@ class ViewController: UIViewController {
         super.viewDidLoad()
 
         importJSONSeedDataIfNeeded()
+      
+      batch()
 
         let venueFetchRequest = Venue.fetchRequest()
         fetchRequest = venueFetchRequest
@@ -74,6 +76,21 @@ class ViewController: UIViewController {
 
         fetchAndReload()
     }
+  
+  private func batch() {
+    let batchUpdate = NSBatchUpdateRequest(entityName: "Venue")
+    batchUpdate.propertiesToUpdate = [#keyPath(Venue.favorite): true]
+    
+    batchUpdate.affectedStores = coreDataStack.managedContext.persistentStoreCoordinator?.persistentStores
+    batchUpdate.resultType = .updatedObjectsCountResultType
+    
+    do {
+      let batchResult = try coreDataStack.managedContext.execute(batchUpdate) as? NSBatchUpdateResult
+      print("Updated:", String(describing: batchResult?.result))
+    } catch let e as NSError {
+      print(e, e.userInfo)
+    }
+  }
 
     // MARK: - Navigation
 
