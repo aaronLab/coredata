@@ -31,11 +31,11 @@ import CoreData
 import Foundation
 
 public extension Category {
-    @nonobjc class func fetchRequest() -> NSFetchRequest<Category> {
-        return NSFetchRequest<Category>(entityName: "Category")
-    }
+  @nonobjc class func fetchRequest() -> NSFetchRequest<Category> {
+    NSFetchRequest<Category>(entityName: "Category")
+  }
 
-    @NSManaged var categoryID: String?
-    @NSManaged var name: String?
-    @NSManaged var venue: Venue?
+  @NSManaged var categoryID: String?
+  @NSManaged var name: String?
+  @NSManaged var venue: Venue?
 }

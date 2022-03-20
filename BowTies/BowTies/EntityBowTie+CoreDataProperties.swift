@@ -12,20 +12,20 @@ import Foundation
 import UIKit
 
 public extension EntityBowTie {
-    @nonobjc class func fetchRequest() -> NSFetchRequest<EntityBowTie> {
-        return NSFetchRequest<EntityBowTie>(entityName: "BowTie")
-    }
+  @nonobjc class func fetchRequest() -> NSFetchRequest<EntityBowTie> {
+    NSFetchRequest<EntityBowTie>(entityName: "BowTie")
+  }
 
-    @NSManaged var name: String?
-    @NSManaged var isFavorite: Bool
-    @NSManaged var lastWorn: Date?
-    @NSManaged var rating: Double
-    @NSManaged var searchKey: String?
-    @NSManaged var timesWorn: Int32
-    @NSManaged var id: UUID?
-    @NSManaged var url: URL?
-    @NSManaged var photoData: Data?
-    @NSManaged var tintColor: UIColor?
+  @NSManaged var name: String?
+  @NSManaged var isFavorite: Bool
+  @NSManaged var lastWorn: Date?
+  @NSManaged var rating: Double
+  @NSManaged var searchKey: String?
+  @NSManaged var timesWorn: Int32
+  @NSManaged var id: UUID?
+  @NSManaged var url: URL?
+  @NSManaged var photoData: Data?
+  @NSManaged var tintColor: UIColor?
 }
 
 extension EntityBowTie: Identifiable {}

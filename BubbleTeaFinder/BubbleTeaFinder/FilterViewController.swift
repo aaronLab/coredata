@@ -34,222 +34,229 @@ import CoreData
 import UIKit
 
 protocol FilterViewControllerDelegate: AnyObject {
-    func filterViewController(
-        filter: FilterViewController,
-        didSelectPredicate predicate: NSPredicate?,
-        sortDescriptor: NSSortDescriptor?
-    )
+  func filterViewController(
+    filter: FilterViewController,
+    didSelectPredicate predicate: NSPredicate?,
+    sortDescriptor: NSSortDescriptor?
+  )
 }
 
 class FilterViewController: UITableViewController {
-    @IBOutlet var firstPriceCategoryLabel: UILabel!
-    @IBOutlet var secondPriceCategoryLabel: UILabel!
-    @IBOutlet var thirdPriceCategoryLabel: UILabel!
-    @IBOutlet var numDealsLabel: UILabel!
+  @IBOutlet var firstPriceCategoryLabel: UILabel!
+  @IBOutlet var secondPriceCategoryLabel: UILabel!
+  @IBOutlet var thirdPriceCategoryLabel: UILabel!
+  @IBOutlet var numDealsLabel: UILabel!
 
-    // MARK: - Price section
+  // MARK: - Price section
 
-    @IBOutlet var cheapVenueCell: UITableViewCell!
-    @IBOutlet var moderateVenueCell: UITableViewCell!
-    @IBOutlet var expensiveVenueCell: UITableViewCell!
+  @IBOutlet var cheapVenueCell: UITableViewCell!
+  @IBOutlet var moderateVenueCell: UITableViewCell!
+  @IBOutlet var expensiveVenueCell: UITableViewCell!
 
-    // MARK: - Most popular section
+  // MARK: - Most popular section
 
-    @IBOutlet var offeringDealCell: UITableViewCell!
-    @IBOutlet var walkingDistanceCell: UITableViewCell!
-    @IBOutlet var userTipsCell: UITableViewCell!
+  @IBOutlet var offeringDealCell: UITableViewCell!
+  @IBOutlet var walkingDistanceCell: UITableViewCell!
+  @IBOutlet var userTipsCell: UITableViewCell!
 
-    // MARK: - Sort section
+  // MARK: - Sort section
 
-    @IBOutlet var nameAZSortCell: UITableViewCell!
-    @IBOutlet var nameZASortCell: UITableViewCell!
-    @IBOutlet var distanceSortCell: UITableViewCell!
-    @IBOutlet var priceSortCell: UITableViewCell!
+  @IBOutlet var nameAZSortCell: UITableViewCell!
+  @IBOutlet var nameZASortCell: UITableViewCell!
+  @IBOutlet var distanceSortCell: UITableViewCell!
+  @IBOutlet var priceSortCell: UITableViewCell!
 
-    // MARK: - Properties
+  // MARK: - Properties
 
-    var coreDataStack: CoreDataStack!
+  var coreDataStack: CoreDataStack!
 
-    weak var delegate: FilterViewControllerDelegate?
-    var selectedSortDescriptor: NSSortDescriptor?
-    var selectedPredicate: NSPredicate?
+  weak var delegate: FilterViewControllerDelegate?
+  var selectedSortDescriptor: NSSortDescriptor?
+  var selectedPredicate: NSPredicate?
 
-    lazy var cheapVenuePredicate: NSPredicate = .init(format: "%K == %@",
-                                                      #keyPath(Venue.priceInfo.priceCategory), "$")
+  lazy var cheapVenuePredicate: NSPredicate = .init(format: "%K == %@",
+                                                    #keyPath(Venue.priceInfo.priceCategory), "$")
 
-    lazy var moderateVenuPredicate: NSPredicate = .init(format: "%K == %@",
-                                                        #keyPath(Venue.priceInfo.priceCategory), "$$")
+  lazy var moderateVenuPredicate: NSPredicate = .init(format: "%K == %@",
+                                                      #keyPath(Venue.priceInfo.priceCategory),
+                                                      "$$")
 
-    lazy var expensiveVenuePredicate: NSPredicate = .init(format: "%K == %@",
-                                                          #keyPath(Venue.priceInfo.priceCategory), "$$$")
+  lazy var expensiveVenuePredicate: NSPredicate = .init(format: "%K == %@",
+                                                        #keyPath(Venue.priceInfo.priceCategory),
+                                                        "$$$")
 
-    lazy var offeringDealPredicate: NSPredicate = .init(format: "%K > 0",
-                                                        #keyPath(Venue.specialCount))
+  lazy var offeringDealPredicate: NSPredicate = .init(format: "%K > 0",
+                                                      #keyPath(Venue.specialCount))
 
-    lazy var walkingDistancePredicate: NSPredicate = .init(format: "%K < 500",
-                                                           #keyPath(Venue.location.distance))
+  lazy var walkingDistancePredicate: NSPredicate = .init(format: "%K < 500",
+                                                         #keyPath(Venue.location.distance))
 
-    lazy var hasUserTipsPredicate: NSPredicate = .init(format: "%K > 0",
-                                                       #keyPath(Venue.stats.tipCount))
+  lazy var hasUserTipsPredicate: NSPredicate = .init(format: "%K > 0",
+                                                     #keyPath(Venue.stats.tipCount))
 
-    lazy var nameSortDescriptor: NSSortDescriptor = {
-        let compareSelector = #selector(NSString.localizedStandardCompare(_:))
-        return NSSortDescriptor(key: #keyPath(Venue.name),
-                                ascending: true,
-                                selector: compareSelector)
-    }()
+  lazy var nameSortDescriptor: NSSortDescriptor = {
+    let compareSelector = #selector(NSString.localizedStandardCompare(_:))
+    return NSSortDescriptor(key: #keyPath(Venue.name),
+                            ascending: true,
+                            selector: compareSelector)
+  }()
 
-    lazy var distanceDescriptor: NSSortDescriptor = .init(key: #keyPath(Venue.location.distance),
-                                                          ascending: true)
+  lazy var distanceDescriptor: NSSortDescriptor = .init(key: #keyPath(Venue.location.distance),
+                                                        ascending: true)
 
-    lazy var priceSortDescriptor: NSSortDescriptor = .init(key: #keyPath(Venue.priceInfo.priceCategory),
-                                                           ascending: true)
+  lazy var priceSortDescriptor: NSSortDescriptor = .init(
+    key: #keyPath(Venue.priceInfo.priceCategory),
+    ascending: true
+  )
 
-    // MARK: - View Life Cycle
+  // MARK: - View Life Cycle
 
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        applyCount(predicate: cheapVenuePredicate, for: firstPriceCategoryLabel)
-        applyCount(predicate: moderateVenuPredicate, for: secondPriceCategoryLabel)
-        applyCountWithoutResultType(predicate: expensiveVenuePredicate, for: thirdPriceCategoryLabel)
-        populateDealsCountLabel()
-    }
+  override func viewDidLoad() {
+    super.viewDidLoad()
+    applyCount(predicate: cheapVenuePredicate, for: firstPriceCategoryLabel)
+    applyCount(predicate: moderateVenuPredicate, for: secondPriceCategoryLabel)
+    applyCountWithoutResultType(
+      predicate: expensiveVenuePredicate,
+      for: thirdPriceCategoryLabel
+    )
+    populateDealsCountLabel()
+  }
 }
 
 // MARK: - IBActions
 
 extension FilterViewController {
-    @IBAction func search(_: UIBarButtonItem) {
-        delegate?.filterViewController(filter: self,
-                                       didSelectPredicate: selectedPredicate,
-                                       sortDescriptor: selectedSortDescriptor)
+  @IBAction func search(_: UIBarButtonItem) {
+    delegate?.filterViewController(filter: self,
+                                   didSelectPredicate: selectedPredicate,
+                                   sortDescriptor: selectedSortDescriptor)
 
-        dismiss(animated: true)
-    }
+    dismiss(animated: true)
+  }
 }
 
 // MARK: - Helpers
 
 extension FilterViewController {
-    private func applyCount(predicate: NSPredicate, for label: UILabel) {
-        let fetchRequest = NSFetchRequest<NSNumber>(entityName: "Venue")
-        fetchRequest.resultType = .countResultType
-        fetchRequest.predicate = predicate
+  private func applyCount(predicate: NSPredicate, for label: UILabel) {
+    let fetchRequest = NSFetchRequest<NSNumber>(entityName: "Venue")
+    fetchRequest.resultType = .countResultType
+    fetchRequest.predicate = predicate
 
-        do {
-            let countResult = try coreDataStack.managedContext.fetch(fetchRequest)
-            let count = countResult.first?.intValue ?? .zero
-            applyString(with: count, for: label)
-        } catch let e {
-            printCountError(e)
-        }
+    do {
+      let countResult = try coreDataStack.managedContext.fetch(fetchRequest)
+      let count = countResult.first?.intValue ?? .zero
+      applyString(with: count, for: label)
+    } catch let e {
+      printCountError(e)
     }
+  }
 
-    private func applyCountWithoutResultType(predicate: NSPredicate, for label: UILabel) {
-        let fetchRequest: NSFetchRequest<Venue> = Venue.fetchRequest()
-        fetchRequest.predicate = predicate
+  private func applyCountWithoutResultType(predicate: NSPredicate, for label: UILabel) {
+    let fetchRequest: NSFetchRequest<Venue> = Venue.fetchRequest()
+    fetchRequest.predicate = predicate
 
-        do {
-            let count = try coreDataStack.managedContext.count(for: fetchRequest)
-            applyString(with: count, for: label)
-        } catch let e {
-            printCountError(e)
-        }
+    do {
+      let count = try coreDataStack.managedContext.count(for: fetchRequest)
+      applyString(with: count, for: label)
+    } catch let e {
+      printCountError(e)
     }
+  }
 
-    private func applyString(with count: Int, for label: UILabel) {
-        let pluralized = count == 1 ? "place" : "places"
+  private func applyString(with count: Int, for label: UILabel) {
+    let pluralized = count == 1 ? "place" : "places"
 
-        label.text = "\(count) bubble tea \(pluralized)"
+    label.text = "\(count) bubble tea \(pluralized)"
+  }
+
+  private func populateDealsCountLabel() {
+    let fetchRequest = NSFetchRequest<NSDictionary>(entityName: "Venue")
+    fetchRequest.resultType = .dictionaryResultType
+
+    let sumExpDesc = NSExpressionDescription()
+    sumExpDesc.name = "sumDeals"
+
+    let specialCountExp = NSExpression(forKeyPath: #keyPath(Venue.specialCount))
+    sumExpDesc.expression = NSExpression(forFunction: "sum:",
+                                         arguments: [specialCountExp])
+    sumExpDesc.expressionResultType = .integer32AttributeType
+
+    fetchRequest.propertiesToFetch = [sumExpDesc]
+
+    do {
+      let result = try coreDataStack.managedContext.fetch(fetchRequest)
+      let dict = result.first
+      let deals = dict?["sumDeals"] as? Int ?? .zero
+      let pluralized = deals == 1 ? "deal" : "deals"
+      numDealsLabel.text = "\(deals) \(pluralized)"
+    } catch let e {
+      printCountError(e)
     }
+  }
 
-    private func populateDealsCountLabel() {
-        let fetchRequest = NSFetchRequest<NSDictionary>(entityName: "Venue")
-        fetchRequest.resultType = .dictionaryResultType
-
-        let sumExpDesc = NSExpressionDescription()
-        sumExpDesc.name = "sumDeals"
-
-        let specialCountExp = NSExpression(forKeyPath: #keyPath(Venue.specialCount))
-        sumExpDesc.expression = NSExpression(forFunction: "sum:",
-                                             arguments: [specialCountExp])
-        sumExpDesc.expressionResultType = .integer32AttributeType
-
-        fetchRequest.propertiesToFetch = [sumExpDesc]
-
-        do {
-            let result = try coreDataStack.managedContext.fetch(fetchRequest)
-            let dict = result.first
-            let deals = dict?["sumDeals"] as? Int ?? .zero
-            let pluralized = deals == 1 ? "deal" : "deals"
-            numDealsLabel.text = "\(deals) \(pluralized)"
-        } catch let e {
-            printCountError(e)
-        }
-    }
-
-    private func printCountError(_ e: Error) {
-        let e = e as NSError
-        print("Count not fetched \(e), \(e.userInfo)")
-    }
+  private func printCountError(_ e: Error) {
+    let e = e as NSError
+    print("Count not fetched \(e), \(e.userInfo)")
+  }
 }
 
 // MARK: - UITableViewDelegate
 
 extension FilterViewController {
-    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        guard let cell = tableView.cellForRow(at: indexPath) else { return }
+  override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    guard let cell = tableView.cellForRow(at: indexPath) else { return }
 
-        switch cell {
-        case cheapVenueCell:
-            selectedPredicate = cheapVenuePredicate
+    switch cell {
+    case cheapVenueCell:
+      selectedPredicate = cheapVenuePredicate
 
-        case moderateVenueCell:
-            selectedPredicate = moderateVenuPredicate
+    case moderateVenueCell:
+      selectedPredicate = moderateVenuPredicate
 
-        case expensiveVenueCell:
-            selectedPredicate = expensiveVenuePredicate
+    case expensiveVenueCell:
+      selectedPredicate = expensiveVenuePredicate
 
-        case offeringDealCell:
-            selectedPredicate = offeringDealPredicate
+    case offeringDealCell:
+      selectedPredicate = offeringDealPredicate
 
-        case walkingDistanceCell:
-            selectedPredicate = walkingDistancePredicate
+    case walkingDistanceCell:
+      selectedPredicate = walkingDistancePredicate
 
-        case userTipsCell:
-            selectedPredicate = hasUserTipsPredicate
+    case userTipsCell:
+      selectedPredicate = hasUserTipsPredicate
 
-        case nameAZSortCell:
-            selectedSortDescriptor = nameSortDescriptor
+    case nameAZSortCell:
+      selectedSortDescriptor = nameSortDescriptor
 
-        case nameZASortCell:
-            selectedSortDescriptor = nameSortDescriptor.reversedSortDescriptor as? NSSortDescriptor
+    case nameZASortCell:
+      selectedSortDescriptor = nameSortDescriptor.reversedSortDescriptor as? NSSortDescriptor
 
-        case distanceSortCell:
-            selectedSortDescriptor = distanceDescriptor
+    case distanceSortCell:
+      selectedSortDescriptor = distanceDescriptor
 
-        case priceSortCell:
-            selectedSortDescriptor = priceSortDescriptor
+    case priceSortCell:
+      selectedSortDescriptor = priceSortDescriptor
 
-        default: break
-        }
-
-        cell.accessoryType = .checkmark
-
-        for section in .zero ..< tableView.numberOfSections {
-            for row in .zero ..< tableView.numberOfRows(inSection: section) {
-                let currentIndexPath = IndexPath(row: row, section: section)
-
-                guard currentIndexPath != indexPath,
-                      let cell = tableView.cellForRow(at: currentIndexPath)
-                else {
-                    continue
-                }
-
-                cell.accessoryType = .none
-            }
-        }
-
-        tableView.deselectRow(at: indexPath, animated: true)
+    default: break
     }
+
+    cell.accessoryType = .checkmark
+
+    for section in .zero ..< tableView.numberOfSections {
+      for row in .zero ..< tableView.numberOfRows(inSection: section) {
+        let currentIndexPath = IndexPath(row: row, section: section)
+
+        guard currentIndexPath != indexPath,
+              let cell = tableView.cellForRow(at: currentIndexPath)
+        else {
+          continue
+        }
+
+        cell.accessoryType = .none
+      }
+    }
+
+    tableView.deselectRow(at: indexPath, animated: true)
+  }
 }

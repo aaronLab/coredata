@@ -10,33 +10,33 @@ import CoreData
 import Foundation
 
 class CoreDataStack {
-    private let modelName: String
+  private let modelName: String
 
-    init(model: Model) {
-        modelName = model.rawValue
+  init(model: Model) {
+    modelName = model.rawValue
+  }
+
+  private lazy var storeContainer: NSPersistentContainer = {
+    let container = NSPersistentContainer(name: modelName)
+
+    container.loadPersistentStores { _, e in
+      guard let e = e as? NSError else { return }
+
+      print("Unresolved error \(e), \(e.userInfo)")
     }
 
-    private lazy var storeContainer: NSPersistentContainer = {
-        let container = NSPersistentContainer(name: modelName)
+    return container
+  }()
 
-        container.loadPersistentStores { _, e in
-            guard let e = e as? NSError else { return }
+  lazy var managedContext: NSManagedObjectContext = storeContainer.viewContext
 
-            print("Unresolved error \(e), \(e.userInfo)")
-        }
+  func saveContext() {
+    guard managedContext.hasChanges else { return }
 
-        return container
-    }()
-
-    lazy var managedContext: NSManagedObjectContext = storeContainer.viewContext
-
-    func saveContext() {
-        guard managedContext.hasChanges else { return }
-
-        do {
-            try managedContext.save()
-        } catch let e as NSError {
-            print("Unaresolved error \(e), \(e.userInfo)")
-        }
+    do {
+      try managedContext.save()
+    } catch let e as NSError {
+      print("Unaresolved error \(e), \(e.userInfo)")
     }
+  }
 }

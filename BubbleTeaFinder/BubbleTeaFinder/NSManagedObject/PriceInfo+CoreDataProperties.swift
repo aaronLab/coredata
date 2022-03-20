@@ -31,10 +31,10 @@ import CoreData
 import Foundation
 
 public extension PriceInfo {
-    @nonobjc class func fetchRequest() -> NSFetchRequest<PriceInfo> {
-        return NSFetchRequest<PriceInfo>(entityName: "PriceInfo")
-    }
+  @nonobjc class func fetchRequest() -> NSFetchRequest<PriceInfo> {
+    NSFetchRequest<PriceInfo>(entityName: "PriceInfo")
+  }
 
-    @NSManaged var priceCategory: String?
-    @NSManaged var venue: Venue?
+  @NSManaged var priceCategory: String?
+  @NSManaged var venue: Venue?
 }

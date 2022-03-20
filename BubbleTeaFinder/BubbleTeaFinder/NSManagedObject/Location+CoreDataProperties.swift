@@ -31,15 +31,15 @@ import CoreData
 import Foundation
 
 public extension Location {
-    @nonobjc class func fetchRequest() -> NSFetchRequest<Location> {
-        return NSFetchRequest<Location>(entityName: "Location")
-    }
+  @nonobjc class func fetchRequest() -> NSFetchRequest<Location> {
+    NSFetchRequest<Location>(entityName: "Location")
+  }
 
-    @NSManaged var address: String?
-    @NSManaged var city: String?
-    @NSManaged var country: String?
-    @NSManaged var distance: Float
-    @NSManaged var state: String?
-    @NSManaged var zipcode: String?
-    @NSManaged var venue: Venue?
+  @NSManaged var address: String?
+  @NSManaged var city: String?
+  @NSManaged var country: String?
+  @NSManaged var distance: Float
+  @NSManaged var state: String?
+  @NSManaged var zipcode: String?
+  @NSManaged var venue: Venue?
 }

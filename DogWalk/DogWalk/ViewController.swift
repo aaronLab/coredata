@@ -34,117 +34,121 @@ import CoreData
 import UIKit
 
 class ViewController: UIViewController {
-    lazy var coreDataStack = CoreDataStack(model: .dogWalk)
+  lazy var coreDataStack = CoreDataStack(model: .dogWalk)
 
-    // MARK: - Properties
+  // MARK: - Properties
 
-    lazy var dateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .short
-        formatter.timeStyle = .medium
-        return formatter
-    }()
+  lazy var dateFormatter: DateFormatter = {
+    let formatter = DateFormatter()
+    formatter.dateStyle = .short
+    formatter.timeStyle = .medium
+    return formatter
+  }()
 
-    var currentDog: EntityDog?
+  var currentDog: EntityDog?
 
-    // MARK: - IBOutlets
+  // MARK: - IBOutlets
 
-    @IBOutlet var tableView: UITableView!
+  @IBOutlet var tableView: UITableView!
 
-    // MARK: - View Life Cycle
+  // MARK: - View Life Cycle
 
-    override func viewDidLoad() {
-        super.viewDidLoad()
+  override func viewDidLoad() {
+    super.viewDidLoad()
 
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
+    tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
 
-        let dogName = "Fido"
-        let dogFetch: NSFetchRequest<EntityDog> = EntityDog.fetchRequest()
-        dogFetch.predicate = NSPredicate(format: "%K == %@",
-                                         #keyPath(EntityDog.name), dogName)
+    let dogName = "Fido"
+    let dogFetch: NSFetchRequest<EntityDog> = EntityDog.fetchRequest()
+    dogFetch.predicate = NSPredicate(format: "%K == %@",
+                                     #keyPath(EntityDog.name), dogName)
 
-        do {
-            let results = try coreDataStack.managedContext.fetch(dogFetch)
-            if results.isEmpty {
-                currentDog = EntityDog(context: coreDataStack.managedContext)
-                currentDog?.name = dogName
-                coreDataStack.saveContext()
-            } else {
-                currentDog = results.first
-            }
+    do {
+      let results = try coreDataStack.managedContext.fetch(dogFetch)
+      if results.isEmpty {
+        currentDog = EntityDog(context: coreDataStack.managedContext)
+        currentDog?.name = dogName
+        coreDataStack.saveContext()
+      } else {
+        currentDog = results.first
+      }
 
-        } catch let e as NSError {
-            print("Fetch error: \(e) desccription: \(e.userInfo)")
-        }
+    } catch let e as NSError {
+      print("Fetch error: \(e) desccription: \(e.userInfo)")
     }
+  }
 }
 
 // MARK: - IBActions
 
 extension ViewController {
-    @IBAction func add(_: UIBarButtonItem) {
-        let walk = EntityWalk(context: coreDataStack.managedContext)
-        walk.date = Date()
+  @IBAction func add(_: UIBarButtonItem) {
+    let walk = EntityWalk(context: coreDataStack.managedContext)
+    walk.date = Date()
 
-        guard let dog = currentDog else { return }
+    guard let dog = currentDog else { return }
 
-        dog.addToWalks(walk)
+    dog.addToWalks(walk)
 
-        coreDataStack.saveContext()
+    coreDataStack.saveContext()
 
-        guard let count = dog.walks?.count else {
-            tableView.reloadData()
-            return
-        }
-
-        let indexPath = IndexPath(row: count - 1, section: .zero)
-        tableView.insertRows(at: [indexPath], with: .fade)
+    guard let count = dog.walks?.count else {
+      tableView.reloadData()
+      return
     }
+
+    let indexPath = IndexPath(row: count - 1, section: .zero)
+    tableView.insertRows(at: [indexPath], with: .fade)
+  }
 }
 
 // MARK: UITableViewDataSource
 
 extension ViewController: UITableViewDataSource {
-    func tableView(_: UITableView, numberOfRowsInSection _: Int) -> Int {
-        currentDog?.walks?.count ?? .zero
+  func tableView(_: UITableView, numberOfRowsInSection _: Int) -> Int {
+    currentDog?.walks?.count ?? .zero
+  }
+
+  func tableView(
+    _ tableView: UITableView,
+    cellForRowAt indexPath: IndexPath
+  ) -> UITableViewCell {
+    let cell = tableView.dequeueReusableCell(
+      withIdentifier: "Cell", for: indexPath
+    )
+
+    guard let walk = currentDog?.walks?[indexPath.row] as? EntityWalk,
+          let walkDate = walk.date
+    else {
+      return cell
     }
 
-    func tableView(
-        _ tableView: UITableView,
-        cellForRowAt indexPath: IndexPath
-    ) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(
-            withIdentifier: "Cell", for: indexPath
-        )
+    cell.textLabel?.text = dateFormatter.string(from: walkDate)
+    return cell
+  }
 
-        guard let walk = currentDog?.walks?[indexPath.row] as? EntityWalk,
-              let walkDate = walk.date
-        else {
-            return cell
-        }
+  func tableView(_: UITableView, titleForHeaderInSection _: Int) -> String? {
+    "List of Walks"
+  }
 
-        cell.textLabel?.text = dateFormatter.string(from: walkDate)
-        return cell
+  func tableView(_: UITableView, canEditRowAt _: IndexPath) -> Bool {
+    true
+  }
+
+  func tableView(
+    _ tableView: UITableView,
+    commit editingStyle: UITableViewCell.EditingStyle,
+    forRowAt indexPath: IndexPath
+  ) {
+    guard let walkToRemove = currentDog?.walks?[indexPath.row] as? EntityWalk,
+          editingStyle == .delete
+    else {
+      return
     }
 
-    func tableView(_: UITableView, titleForHeaderInSection _: Int) -> String? {
-        "List of Walks"
-    }
+    coreDataStack.managedContext.delete(walkToRemove)
+    coreDataStack.saveContext()
 
-    func tableView(_: UITableView, canEditRowAt _: IndexPath) -> Bool {
-        true
-    }
-
-    func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
-        guard let walkToRemove = currentDog?.walks?[indexPath.row] as? EntityWalk,
-              editingStyle == .delete
-        else {
-            return
-        }
-
-        coreDataStack.managedContext.delete(walkToRemove)
-        coreDataStack.saveContext()
-
-        tableView.deleteRows(at: [indexPath], with: .automatic)
-    }
+    tableView.deleteRows(at: [indexPath], with: .automatic)
+  }
 }

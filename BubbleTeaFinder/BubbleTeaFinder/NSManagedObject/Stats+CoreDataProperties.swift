@@ -31,12 +31,12 @@ import CoreData
 import Foundation
 
 public extension Stats {
-    @nonobjc class func fetchRequest() -> NSFetchRequest<Stats> {
-        return NSFetchRequest<Stats>(entityName: "Stats")
-    }
+  @nonobjc class func fetchRequest() -> NSFetchRequest<Stats> {
+    NSFetchRequest<Stats>(entityName: "Stats")
+  }
 
-    @NSManaged var checkinsCount: Int32
-    @NSManaged var tipCount: Int32
-    @NSManaged var usersCount: Int32
-    @NSManaged var venue: Venue?
+  @NSManaged var checkinsCount: Int32
+  @NSManaged var tipCount: Int32
+  @NSManaged var usersCount: Int32
+  @NSManaged var venue: Venue?
 }

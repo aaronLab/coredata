@@ -9,5 +9,5 @@
 import Foundation
 
 enum Model: String {
-    case dogWalk = "DogWalk"
+  case dogWalk = "DogWalk"
 }

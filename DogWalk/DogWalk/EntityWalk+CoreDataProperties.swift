@@ -11,12 +11,12 @@ import CoreData
 import Foundation
 
 public extension EntityWalk {
-    @nonobjc class func fetchRequest() -> NSFetchRequest<EntityWalk> {
-        return NSFetchRequest<EntityWalk>(entityName: "Walk")
-    }
+  @nonobjc class func fetchRequest() -> NSFetchRequest<EntityWalk> {
+    NSFetchRequest<EntityWalk>(entityName: "Walk")
+  }
 
-    @NSManaged var date: Date?
-    @NSManaged var dog: EntityDog?
+  @NSManaged var date: Date?
+  @NSManaged var dog: EntityDog?
 }
 
 extension EntityWalk: Identifiable {}

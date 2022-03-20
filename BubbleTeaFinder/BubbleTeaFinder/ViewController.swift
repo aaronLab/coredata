@@ -34,209 +34,222 @@ import CoreData
 import UIKit
 
 class ViewController: UIViewController {
-    // MARK: - Properties
+  // MARK: - Properties
 
-    private let filterViewControllerSegueIdentifier = "toFilterViewController"
-    private let venueCellIdentifier = "VenueCell"
+  private let filterViewControllerSegueIdentifier = "toFilterViewController"
+  private let venueCellIdentifier = "VenueCell"
 
-    lazy var coreDataStack = CoreDataStack(modelName: "BubbleTeaFinder")
+  lazy var coreDataStack = CoreDataStack(modelName: "BubbleTeaFinder")
 
-    var fetchRequest: NSFetchRequest<Venue>?
-    var venues: [Venue] = []
+  var fetchRequest: NSFetchRequest<Venue>?
+  var venues: [Venue] = []
 
-    var asyncFetchRequest: NSAsynchronousFetchRequest<Venue>?
+  var asyncFetchRequest: NSAsynchronousFetchRequest<Venue>?
 
-    // MARK: - IBOutlets
+  // MARK: - IBOutlets
 
-    @IBOutlet var tableView: UITableView!
+  @IBOutlet var tableView: UITableView!
 
-    // MARK: - View Life Cycle
+  // MARK: - View Life Cycle
 
-    override func viewDidLoad() {
-        super.viewDidLoad()
+  override func viewDidLoad() {
+    super.viewDidLoad()
 
-        importJSONSeedDataIfNeeded()
-      
-      batch()
+    importJSONSeedDataIfNeeded()
 
-        let venueFetchRequest = Venue.fetchRequest()
-        fetchRequest = venueFetchRequest
+    batch()
 
-        asyncFetchRequest = NSAsynchronousFetchRequest<Venue>(fetchRequest: venueFetchRequest) { [weak self] result in
+    let venueFetchRequest = Venue.fetchRequest()
+    fetchRequest = venueFetchRequest
 
-            guard let self = self,
-                  let venues = result.finalResult
-            else {
-                return
-            }
+    asyncFetchRequest =
+      NSAsynchronousFetchRequest<Venue>(fetchRequest: venueFetchRequest) { [weak self] result in
 
-            self.venues = venues
-            self.tableView.reloadData()
+        guard let self = self,
+              let venues = result.finalResult
+        else {
+          return
         }
 
-        fetchAndReload()
-    }
-  
+        self.venues = venues
+        self.tableView.reloadData()
+      }
+
+    fetchAndReload()
+  }
+
   private func batch() {
     let batchUpdate = NSBatchUpdateRequest(entityName: "Venue")
     batchUpdate.propertiesToUpdate = [#keyPath(Venue.favorite): true]
-    
-    batchUpdate.affectedStores = coreDataStack.managedContext.persistentStoreCoordinator?.persistentStores
+
+    batchUpdate.affectedStores = coreDataStack.managedContext.persistentStoreCoordinator?
+      .persistentStores
     batchUpdate.resultType = .updatedObjectsCountResultType
-    
+
     do {
-      let batchResult = try coreDataStack.managedContext.execute(batchUpdate) as? NSBatchUpdateResult
+      let batchResult = try coreDataStack.managedContext
+        .execute(batchUpdate) as? NSBatchUpdateResult
       print("Updated:", String(describing: batchResult?.result))
     } catch let e as NSError {
       print(e, e.userInfo)
     }
   }
 
-    // MARK: - Navigation
+  // MARK: - Navigation
 
-    override func prepare(for segue: UIStoryboardSegue, sender _: Any?) {
-        guard segue.identifier == filterViewControllerSegueIdentifier,
-              let navC = segue.destination as? UINavigationController,
-              let filterVC = navC.topViewController as? FilterViewController
-        else {
-            return
-        }
-
-        filterVC.coreDataStack = coreDataStack
-        filterVC.delegate = self
+  override func prepare(for segue: UIStoryboardSegue, sender _: Any?) {
+    guard segue.identifier == filterViewControllerSegueIdentifier,
+          let navC = segue.destination as? UINavigationController,
+          let filterVC = navC.topViewController as? FilterViewController
+    else {
+      return
     }
+
+    filterVC.coreDataStack = coreDataStack
+    filterVC.delegate = self
+  }
 }
 
 // MARK: - Helpers
 
 extension ViewController {
-    private func fetchAndReload() {
-        guard let asyncFetchRequest = asyncFetchRequest else {
-            return
-        }
-
-        do {
-            try coreDataStack.managedContext.execute(asyncFetchRequest)
-        } catch let e as NSError {
-            print("Could not fetch \(e), \(e.userInfo)")
-        }
+  private func fetchAndReload() {
+    guard let asyncFetchRequest = asyncFetchRequest else {
+      return
     }
+
+    do {
+      try coreDataStack.managedContext.execute(asyncFetchRequest)
+    } catch let e as NSError {
+      print("Could not fetch \(e), \(e.userInfo)")
+    }
+  }
 }
 
 // MARK: - IBActions
 
 extension ViewController {
-    @IBAction func unwindToVenueListViewController(_: UIStoryboardSegue) {}
+  @IBAction func unwindToVenueListViewController(_: UIStoryboardSegue) {}
 }
 
 // MARK: - UITableViewDataSource
 
 extension ViewController: UITableViewDataSource {
-    func tableView(_: UITableView, numberOfRowsInSection _: Int) -> Int {
-        venues.count
-    }
+  func tableView(_: UITableView, numberOfRowsInSection _: Int) -> Int {
+    venues.count
+  }
 
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: venueCellIdentifier, for: indexPath)
-        let venue = venues[indexPath.row]
+  func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+    let cell = tableView.dequeueReusableCell(
+      withIdentifier: venueCellIdentifier,
+      for: indexPath
+    )
+    let venue = venues[indexPath.row]
 
-        cell.textLabel?.text = nil
-        cell.detailTextLabel?.text = nil
+    cell.textLabel?.text = nil
+    cell.detailTextLabel?.text = nil
 
-        cell.textLabel?.text = venue.name
-        cell.detailTextLabel?.text = venue.priceInfo?.priceCategory
-        return cell
-    }
+    cell.textLabel?.text = venue.name
+    cell.detailTextLabel?.text = venue.priceInfo?.priceCategory
+    return cell
+  }
 }
 
 // MARK: - Data loading
 
 extension ViewController {
-    func importJSONSeedDataIfNeeded() {
-        let fetchRequest = NSFetchRequest<Venue>(entityName: "Venue")
+  func importJSONSeedDataIfNeeded() {
+    let fetchRequest = NSFetchRequest<Venue>(entityName: "Venue")
 
-        do {
-            let venueCount = try coreDataStack.managedContext.count(for: fetchRequest)
-            guard venueCount == 0 else { return }
-            try importJSONSeedData()
-        } catch let error as NSError {
-            print("Error fetching: \(error), \(error.userInfo)")
-        }
+    do {
+      let venueCount = try coreDataStack.managedContext.count(for: fetchRequest)
+      guard venueCount == 0 else { return }
+      try importJSONSeedData()
+    } catch let error as NSError {
+      print("Error fetching: \(error), \(error.userInfo)")
+    }
+  }
+
+  func importJSONSeedData() throws {
+    // swiftlint:disable:next force_unwrapping
+    let jsonURL = Bundle.main.url(forResource: "seed", withExtension: "json")!
+    let jsonData = try Data(contentsOf: jsonURL)
+
+    guard
+      let jsonDict = try JSONSerialization.jsonObject(
+        with: jsonData,
+        options: [.fragmentsAllowed]
+      ) as? [String: Any],
+      let responseDict = jsonDict["response"] as? [String: Any],
+      let jsonArray = responseDict["venues"] as? [[String: Any]]
+    else {
+      return
     }
 
-    func importJSONSeedData() throws {
-        // swiftlint:disable:next force_unwrapping
-        let jsonURL = Bundle.main.url(forResource: "seed", withExtension: "json")!
-        let jsonData = try Data(contentsOf: jsonURL)
+    for jsonDictionary in jsonArray {
+      guard
+        let contactDict = jsonDictionary["contact"] as? [String: String],
+        let specialsDict = jsonDictionary["specials"] as? [String: Any],
+        let locationDict = jsonDictionary["location"] as? [String: Any],
+        let priceDict = jsonDictionary["price"] as? [String: Any],
+        let statsDict = jsonDictionary["stats"] as? [String: Any]
+      else {
+        continue
+      }
 
-        guard
-            let jsonDict = try JSONSerialization.jsonObject(with: jsonData, options: [.fragmentsAllowed]) as? [String: Any],
-            let responseDict = jsonDict["response"] as? [String: Any],
-            let jsonArray = responseDict["venues"] as? [[String: Any]]
-        else {
-            return
-        }
+      let venueName = jsonDictionary["name"] as? String
+      let venuePhone = contactDict["phone"]
+      let specialCount = specialsDict["count"] as? Int32 ?? 0
 
-        for jsonDictionary in jsonArray {
-            guard
-                let contactDict = jsonDictionary["contact"] as? [String: String],
-                let specialsDict = jsonDictionary["specials"] as? [String: Any],
-                let locationDict = jsonDictionary["location"] as? [String: Any],
-                let priceDict = jsonDictionary["price"] as? [String: Any],
-                let statsDict = jsonDictionary["stats"] as? [String: Any]
-            else {
-                continue
-            }
+      let location = Location(context: coreDataStack.managedContext)
+      location.address = locationDict["address"] as? String
+      location.city = locationDict["city"] as? String
+      location.state = locationDict["state"] as? String
+      location.zipcode = locationDict["postalCode"] as? String
+      location.distance = locationDict["distance"] as? Float ?? 0
 
-            let venueName = jsonDictionary["name"] as? String
-            let venuePhone = contactDict["phone"]
-            let specialCount = specialsDict["count"] as? Int32 ?? 0
+      let category = Category(context: coreDataStack.managedContext)
 
-            let location = Location(context: coreDataStack.managedContext)
-            location.address = locationDict["address"] as? String
-            location.city = locationDict["city"] as? String
-            location.state = locationDict["state"] as? String
-            location.zipcode = locationDict["postalCode"] as? String
-            location.distance = locationDict["distance"] as? Float ?? 0
+      let priceInfo = PriceInfo(context: coreDataStack.managedContext)
+      priceInfo.priceCategory = priceDict["currency"] as? String
 
-            let category = Category(context: coreDataStack.managedContext)
+      let stats = Stats(context: coreDataStack.managedContext)
+      stats.checkinsCount = statsDict["checkinsCount"] as? Int32 ?? 0
+      stats.tipCount = statsDict["tipCount"] as? Int32 ?? 0
 
-            let priceInfo = PriceInfo(context: coreDataStack.managedContext)
-            priceInfo.priceCategory = priceDict["currency"] as? String
-
-            let stats = Stats(context: coreDataStack.managedContext)
-            stats.checkinsCount = statsDict["checkinsCount"] as? Int32 ?? 0
-            stats.tipCount = statsDict["tipCount"] as? Int32 ?? 0
-
-            let venue = Venue(context: coreDataStack.managedContext)
-            venue.name = venueName
-            venue.phone = venuePhone
-            venue.specialCount = specialCount
-            venue.location = location
-            venue.category = category
-            venue.priceInfo = priceInfo
-            venue.stats = stats
-        }
-
-        coreDataStack.saveContext()
+      let venue = Venue(context: coreDataStack.managedContext)
+      venue.name = venueName
+      venue.phone = venuePhone
+      venue.specialCount = specialCount
+      venue.location = location
+      venue.category = category
+      venue.priceInfo = priceInfo
+      venue.stats = stats
     }
+
+    coreDataStack.saveContext()
+  }
 }
 
 // MARK: - FilterViewControllerDelegate
 
 extension ViewController: FilterViewControllerDelegate {
-    func filterViewController(filter _: FilterViewController, didSelectPredicate predicate: NSPredicate?, sortDescriptor: NSSortDescriptor?) {
-        guard let fetchRequest = fetchRequest else { return }
+  func filterViewController(
+    filter _: FilterViewController,
+    didSelectPredicate predicate: NSPredicate?,
+    sortDescriptor: NSSortDescriptor?
+  ) {
+    guard let fetchRequest = fetchRequest else { return }
 
-        fetchRequest.predicate = nil
-        fetchRequest.sortDescriptors = nil
+    fetchRequest.predicate = nil
+    fetchRequest.sortDescriptors = nil
 
-        fetchRequest.predicate = predicate
+    fetchRequest.predicate = predicate
 
-        if let sortDescriptor = sortDescriptor {
-            fetchRequest.sortDescriptors = [sortDescriptor]
-        }
-
-        fetchAndReload()
+    if let sortDescriptor = sortDescriptor {
+      fetchRequest.sortDescriptors = [sortDescriptor]
     }
+
+    fetchAndReload()
+  }
 }

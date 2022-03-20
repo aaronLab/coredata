@@ -31,16 +31,16 @@ import CoreData
 import Foundation
 
 public extension Venue {
-    @nonobjc class func fetchRequest() -> NSFetchRequest<Venue> {
-        return NSFetchRequest<Venue>(entityName: "Venue")
-    }
+  @nonobjc class func fetchRequest() -> NSFetchRequest<Venue> {
+    NSFetchRequest<Venue>(entityName: "Venue")
+  }
 
-    @NSManaged var favorite: Bool
-    @NSManaged var name: String?
-    @NSManaged var phone: String?
-    @NSManaged var specialCount: Int32
-    @NSManaged var category: Category?
-    @NSManaged var location: Location?
-    @NSManaged var priceInfo: PriceInfo?
-    @NSManaged var stats: Stats?
+  @NSManaged var favorite: Bool
+  @NSManaged var name: String?
+  @NSManaged var phone: String?
+  @NSManaged var specialCount: Int32
+  @NSManaged var category: Category?
+  @NSManaged var location: Location?
+  @NSManaged var priceInfo: PriceInfo?
+  @NSManaged var stats: Stats?
 }

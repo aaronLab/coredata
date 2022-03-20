@@ -34,228 +34,230 @@ import CoreData
 import UIKit
 
 class ViewController: UIViewController {
-    var managedContext: NSManagedObjectContext!
+  var managedContext: NSManagedObjectContext!
 
-    var currentBowTie: EntityBowTie!
+  var currentBowTie: EntityBowTie!
 
-    // MARK: - IBOutlets
+  // MARK: - IBOutlets
 
-    @IBOutlet var segmentedControl: UISegmentedControl!
-    @IBOutlet var imageView: UIImageView!
-    @IBOutlet var nameLabel: UILabel!
-    @IBOutlet var ratingLabel: UILabel!
-    @IBOutlet var timesWornLabel: UILabel!
-    @IBOutlet var lastWornLabel: UILabel!
-    @IBOutlet var favoriteLabel: UILabel!
-    @IBOutlet var wearButton: UIButton!
-    @IBOutlet var rateButton: UIButton!
+  @IBOutlet var segmentedControl: UISegmentedControl!
+  @IBOutlet var imageView: UIImageView!
+  @IBOutlet var nameLabel: UILabel!
+  @IBOutlet var ratingLabel: UILabel!
+  @IBOutlet var timesWornLabel: UILabel!
+  @IBOutlet var lastWornLabel: UILabel!
+  @IBOutlet var favoriteLabel: UILabel!
+  @IBOutlet var wearButton: UIButton!
+  @IBOutlet var rateButton: UIButton!
 
-    // MARK: - View Life Cycle
+  // MARK: - View Life Cycle
 
-    override func viewDidLoad() {
-        super.viewDidLoad()
+  override func viewDidLoad() {
+    super.viewDidLoad()
 
-        let appDelegate = UIApplication.shared.delegate as? AppDelegate
-        managedContext = appDelegate?.persistentContainer.viewContext
+    let appDelegate = UIApplication.shared.delegate as? AppDelegate
+    managedContext = appDelegate?.persistentContainer.viewContext
 
-        insertSampleData()
+    insertSampleData()
 
-        let request: NSFetchRequest<EntityBowTie> = EntityBowTie.fetchRequest()
-        let firstTitle = segmentedControl.titleForSegment(at: 0) ?? ""
-        request.predicate = NSPredicate(
-            format: "%K = %@",
-            argumentArray: [#keyPath(EntityBowTie.searchKey), firstTitle]
-        )
+    let request: NSFetchRequest<EntityBowTie> = EntityBowTie.fetchRequest()
+    let firstTitle = segmentedControl.titleForSegment(at: 0) ?? ""
+    request.predicate = NSPredicate(
+      format: "%K = %@",
+      argumentArray: [#keyPath(EntityBowTie.searchKey), firstTitle]
+    )
 
-        do {
-            let results = try managedContext.fetch(request)
+    do {
+      let results = try managedContext.fetch(request)
 
-            if let tie = results.first {
-                populate(bowtie: tie)
-            }
-        } catch let e as NSError {
-            print("Could not fetch \(e), \(e.userInfo)")
-        }
+      if let tie = results.first {
+        populate(bowtie: tie)
+      }
+    } catch let e as NSError {
+      print("Could not fetch \(e), \(e.userInfo)")
+    }
+  }
+
+  private func populate(bowtie: EntityBowTie) {
+    guard let imageData = bowtie.photoData,
+          let lastWorn = bowtie.lastWorn,
+          let tintColor = bowtie.tintColor
+    else {
+      return
     }
 
-    private func populate(bowtie: EntityBowTie) {
-        guard let imageData = bowtie.photoData,
-              let lastWorn = bowtie.lastWorn,
-              let tintColor = bowtie.tintColor
-        else {
-            return
-        }
+    imageView.image = UIImage(data: imageData)
+    nameLabel.text = bowtie.name
+    ratingLabel.text = "Rating: \(bowtie.rating)/5"
 
-        imageView.image = UIImage(data: imageData)
-        nameLabel.text = bowtie.name
-        ratingLabel.text = "Rating: \(bowtie.rating)/5"
+    timesWornLabel.text = "# times worn: \(bowtie.timesWorn)"
 
-        timesWornLabel.text = "# times worn: \(bowtie.timesWorn)"
+    let dateFormatter = DateFormatter()
+    dateFormatter.dateStyle = .short
+    dateFormatter.timeStyle = .none
 
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateStyle = .short
-        dateFormatter.timeStyle = .none
+    lastWornLabel.text = "Last worn: \(dateFormatter.string(from: lastWorn))"
 
-        lastWornLabel.text = "Last worn: \(dateFormatter.string(from: lastWorn))"
+    favoriteLabel.isHidden = !bowtie.isFavorite
+    view.tintColor = tintColor
 
-        favoriteLabel.isHidden = !bowtie.isFavorite
-        view.tintColor = tintColor
+    currentBowTie = bowtie
+  }
 
-        currentBowTie = bowtie
+  // MARK: - IBActions
+
+  @IBAction func segmentedControl(_ sender: UISegmentedControl) {
+    guard let selectedValue = sender.titleForSegment(at: sender.selectedSegmentIndex) else {
+      return
     }
 
-    // MARK: - IBActions
+    let request: NSFetchRequest<EntityBowTie> = EntityBowTie.fetchRequest()
+    request.predicate = NSPredicate(
+      format: "%K = %@",
+      argumentArray: [#keyPath(EntityBowTie.searchKey), selectedValue]
+    )
 
-    @IBAction func segmentedControl(_ sender: UISegmentedControl) {
-        guard let selectedValue = sender.titleForSegment(at: sender.selectedSegmentIndex) else {
-            return
-        }
+    do {
+      let results = try managedContext.fetch(request)
+      guard let tie = results.first else {
+        print("Could not fetch")
+        return
+      }
 
-        let request: NSFetchRequest<EntityBowTie> = EntityBowTie.fetchRequest()
-        request.predicate = NSPredicate(
-            format: "%K = %@",
-            argumentArray: [#keyPath(EntityBowTie.searchKey), selectedValue]
-        )
+      currentBowTie = tie
+      populate(bowtie: currentBowTie)
+    } catch let e as NSError {
+      print("Could not fetch \(e), \(e.userInfo)")
+    }
+  }
 
-        do {
-            let results = try managedContext.fetch(request)
-            guard let tie = results.first else {
-                print("Could not fetch")
-                return
-            }
+  @IBAction func wear(_: UIButton) {
+    currentBowTie.timesWorn += 1
+    currentBowTie.lastWorn = Date()
 
-            currentBowTie = tie
-            populate(bowtie: currentBowTie)
-        } catch let e as NSError {
-            print("Could not fetch \(e), \(e.userInfo)")
-        }
+    do {
+      try managedContext.save()
+      populate(bowtie: currentBowTie)
+    } catch let e as NSError {
+      print("Could not save \(e), \(e.userInfo)")
+    }
+  }
+
+  @IBAction func rate(_: UIButton) {
+    let alert = UIAlertController(title: "New Rating",
+                                  message: "Rate this bow tie",
+                                  preferredStyle: .alert)
+
+    alert.addTextField { textField in
+      textField.keyboardType = .decimalPad
     }
 
-    @IBAction func wear(_: UIButton) {
-        currentBowTie.timesWorn += 1
-        currentBowTie.lastWorn = Date()
+    let cancelAction = UIAlertAction(title: "Cancel",
+                                     style: .cancel)
 
-        do {
-            try managedContext.save()
-            populate(bowtie: currentBowTie)
-        } catch let e as NSError {
-            print("Could not save \(e), \(e.userInfo)")
-        }
+    let saveAction = UIAlertAction(title: "Save",
+                                   style: .default) { [weak self] _ in
+      guard let self = self,
+            let textField = alert.textFields?.first
+      else {
+        return
+      }
+
+      self.update(rating: textField.text)
     }
 
-    @IBAction func rate(_: UIButton) {
-        let alert = UIAlertController(title: "New Rating",
-                                      message: "Rate this bow tie",
-                                      preferredStyle: .alert)
+    alert.addAction(cancelAction)
+    alert.addAction(saveAction)
 
-        alert.addTextField { textField in
-            textField.keyboardType = .decimalPad
-        }
+    present(alert, animated: true)
+  }
 
-        let cancelAction = UIAlertAction(title: "Cancel",
-                                         style: .cancel)
-
-        let saveAction = UIAlertAction(title: "Save",
-                                       style: .default) { [weak self] _ in
-            guard let self = self,
-                  let textField = alert.textFields?.first
-            else {
-                return
-            }
-
-            self.update(rating: textField.text)
-        }
-
-        alert.addAction(cancelAction)
-        alert.addAction(saveAction)
-
-        present(alert, animated: true)
+  private func update(rating: String?) {
+    guard let str = rating,
+          let rating = Double(str)
+    else {
+      return
     }
 
-    private func update(rating: String?) {
-        guard let str = rating,
-              let rating = Double(str)
-        else {
-            return
-        }
+    do {
+      currentBowTie.rating = rating
+      try managedContext.save()
+      populate(bowtie: currentBowTie)
+    } catch let e as NSError {
+      if e.domain == NSCocoaErrorDomain,
+         e.code == NSValidationNumberTooLargeError || e
+         .code == NSValidationNumberTooSmallError
+      {
+        rate(rateButton)
+        return
+      }
 
-        do {
-            currentBowTie.rating = rating
-            try managedContext.save()
-            populate(bowtie: currentBowTie)
-        } catch let e as NSError {
-            if e.domain == NSCocoaErrorDomain,
-               e.code == NSValidationNumberTooLargeError || e.code == NSValidationNumberTooSmallError
-            {
-                rate(rateButton)
-                return
-            }
+      print("Could not save \(e), \(e.userInfo)")
+    }
+  }
 
-            print("Could not save \(e), \(e.userInfo)")
-        }
+  private func insertSampleData() {
+    let fetch: NSFetchRequest<EntityBowTie> = EntityBowTie.fetchRequest()
+    fetch.predicate = NSPredicate(format: "searchKey != nil")
+
+    let tieCount = (try? managedContext.count(for: fetch)) ?? .zero
+
+    if tieCount > .zero {
+      // SampleData.plist data already in Core Data
+      return
     }
 
-    private func insertSampleData() {
-        let fetch: NSFetchRequest<EntityBowTie> = EntityBowTie.fetchRequest()
-        fetch.predicate = NSPredicate(format: "searchKey != nil")
+    let path = Bundle.main.url(forResource: "SampleData", withExtension: "plist")!
+    let data = try! Data(contentsOf: path)
+    let dataArray = try! PropertyListSerialization
+      .propertyList(from: data, format: nil) as! [[String: Any]]
 
-        let tieCount = (try? managedContext.count(for: fetch)) ?? .zero
+    for dict in dataArray {
+      let entity = NSEntityDescription.entity(
+        forEntityName: "BowTie",
+        in: managedContext
+      )!
 
-        if tieCount > .zero {
-            // SampleData.plist data already in Core Data
-            return
-        }
+      let bowtie = EntityBowTie(entity: entity, insertInto: managedContext)
 
-        let path = Bundle.main.url(forResource: "SampleData", withExtension: "plist")!
-        let data = try! Data(contentsOf: path)
-        let dataArray = try! PropertyListSerialization.propertyList(from: data, format: nil) as! [[String: Any]]
+      bowtie.id = UUID(uuidString: dict["id"] as! String)
+      bowtie.name = dict["name"] as? String
+      bowtie.searchKey = dict["searchKey"] as? String
+      bowtie.rating = dict["rating"] as! Double
 
-        for dict in dataArray {
-            let entity = NSEntityDescription.entity(
-                forEntityName: "BowTie",
-                in: managedContext
-            )!
+      let colorDict = dict["tintColor"] as! [String: Any]
+      bowtie.tintColor = UIColor.color(dict: colorDict)
 
-            let bowtie = EntityBowTie(entity: entity, insertInto: managedContext)
+      let imageName = dict["imageName"] as? String
+      let image = UIImage(named: imageName!)
+      bowtie.photoData = image?.pngData()
+      bowtie.lastWorn = dict["lastWorn"] as? Date
 
-            bowtie.id = UUID(uuidString: dict["id"] as! String)
-            bowtie.name = dict["name"] as? String
-            bowtie.searchKey = dict["searchKey"] as? String
-            bowtie.rating = dict["rating"] as! Double
-
-            let colorDict = dict["tintColor"] as! [String: Any]
-            bowtie.tintColor = UIColor.color(dict: colorDict)
-
-            let imageName = dict["imageName"] as? String
-            let image = UIImage(named: imageName!)
-            bowtie.photoData = image?.pngData()
-            bowtie.lastWorn = dict["lastWorn"] as? Date
-
-            let timesNumber = dict["timesWorn"] as! NSNumber
-            bowtie.timesWorn = timesNumber.int32Value
-            bowtie.isFavorite = dict["isFavorite"] as! Bool
-            bowtie.url = URL(string: dict["url"] as! String)
-        }
-
-        try? managedContext.save()
+      let timesNumber = dict["timesWorn"] as! NSNumber
+      bowtie.timesWorn = timesNumber.int32Value
+      bowtie.isFavorite = dict["isFavorite"] as! Bool
+      bowtie.url = URL(string: dict["url"] as! String)
     }
+
+    try? managedContext.save()
+  }
 }
 
 private extension UIColor {
-    static func color(dict: [String: Any]) -> UIColor? {
-        guard
-            let red = dict["red"] as? NSNumber,
-            let green = dict["green"] as? NSNumber,
-            let blue = dict["blue"] as? NSNumber
-        else {
-            return nil
-        }
-
-        return UIColor(
-            red: CGFloat(truncating: red) / 255.0,
-            green: CGFloat(truncating: green) / 255.0,
-            blue: CGFloat(truncating: blue) / 255.0,
-            alpha: 1
-        )
+  static func color(dict: [String: Any]) -> UIColor? {
+    guard
+      let red = dict["red"] as? NSNumber,
+      let green = dict["green"] as? NSNumber,
+      let blue = dict["blue"] as? NSNumber
+    else {
+      return nil
     }
+
+    return UIColor(
+      red: CGFloat(truncating: red) / 255.0,
+      green: CGFloat(truncating: green) / 255.0,
+      blue: CGFloat(truncating: blue) / 255.0,
+      alpha: 1
+    )
+  }
 }
