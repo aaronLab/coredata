@@ -34,11 +34,13 @@ import UIKit
 
 class TeamCell: UITableViewCell {
   // MARK: - IBOutlets
-  @IBOutlet weak var teamLabel: UILabel!
-  @IBOutlet weak var scoreLabel: UILabel!
-  @IBOutlet weak var flagImageView: UIImageView!
+
+  @IBOutlet var teamLabel: UILabel!
+  @IBOutlet var scoreLabel: UILabel!
+  @IBOutlet var flagImageView: UIImageView!
 
   // MARK: - View Life Cycle
+
   override func prepareForReuse() {
     super.prepareForReuse()
 

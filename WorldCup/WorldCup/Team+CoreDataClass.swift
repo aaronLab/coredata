@@ -1,3 +1,4 @@
+import CoreData
 /// Copyright (c) 2020 Razeware LLC
 ///
 /// Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -30,8 +31,6 @@
 /// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 /// THE SOFTWARE.
 import Foundation
-import CoreData
 
 @objc(Team)
-public class Team: NSManagedObject {
-}
+public class Team: NSManagedObject {}

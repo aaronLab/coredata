@@ -30,8 +30,8 @@
 /// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 /// THE SOFTWARE.
 
-import Foundation
 import CoreData
+import Foundation
 
 class CoreDataStack {
   private let modelName: String
@@ -40,9 +40,7 @@ class CoreDataStack {
     self.modelName = modelName
   }
 
-  lazy var managedContext: NSManagedObjectContext = {
-    return self.storeContainer.viewContext
-  }()
+  lazy var managedContext: NSManagedObjectContext = self.storeContainer.viewContext
 
   private lazy var storeContainer: NSPersistentContainer = {
     let container = NSPersistentContainer(name: self.modelName)
@@ -54,7 +52,7 @@ class CoreDataStack {
     return container
   }()
 
-  func saveContext () {
+  func saveContext() {
     guard managedContext.hasChanges else { return }
 
     do {

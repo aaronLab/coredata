@@ -31,19 +31,17 @@
 /// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 /// THE SOFTWARE.
 
-import Foundation
 import CoreData
+import Foundation
 
-extension Team {
-  
-  @nonobjc public class func fetchRequest() -> NSFetchRequest<Team> {
-    return NSFetchRequest<Team>(entityName: "Team")
+public extension Team {
+  @nonobjc class func fetchRequest() -> NSFetchRequest<Team> {
+    NSFetchRequest<Team>(entityName: "Team")
   }
-  
-  @NSManaged public var imageName: String?
-  @NSManaged public var losses: Int32
-  @NSManaged public var qualifyingZone: String?
-  @NSManaged public var teamName: String?
-  @NSManaged public var wins: Int32
-  
+
+  @NSManaged var imageName: String?
+  @NSManaged var losses: Int32
+  @NSManaged var qualifyingZone: String?
+  @NSManaged var teamName: String?
+  @NSManaged var wins: Int32
 }
