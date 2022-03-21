@@ -149,6 +149,7 @@
                                     <outlet property="noteCreateDate" destination="qF3-It-NzW" id="OjG-jb-MvW"/>
                                     <outlet property="noteImage" destination="moU-sc-IAN" id="9sk-ct-V0B"/>
                                     <outlet property="noteTitle" destination="28X-6R-oxK" id="GCV-dn-acV"/>
+                                    <segue destination="t4y-WJ-gN4" kind="showDetail" identifier="showNoteDetail" id="zKA-lB-S9l"/>
                                 </connections>
                             </tableViewCell>
                         </prototypes>
@@ -387,7 +388,7 @@
         </scene>
     </scenes>
     <inferredMetricsTieBreakers>
-        <segue reference="GCZ-pB-Bnh"/>
+        <segue reference="zKA-lB-S9l"/>
     </inferredMetricsTieBreakers>
     <resources>
         <systemColor name="darkTextColor">
